@@ -12,7 +12,9 @@ export const createComment = (postId: string, text: string): Comment => {
     postId,
     text,
     createdBy: user.uid,
+    createdByName: user.displayName || "Unknown",
     createdAt: Date.now(),
+    
     syncStatus: "pending",
   };
 

@@ -1,3 +1,4 @@
+// src/services/syncComments.service.ts
 import NetInfo from "@react-native-community/netinfo";
 import { ref, set } from "firebase/database";
 import { auth, realtimeDb } from "../firebase";

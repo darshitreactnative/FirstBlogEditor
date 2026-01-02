@@ -20,6 +20,7 @@ export const listenToComments = (
     const data = snapshot.val();
     const comments: Comment[] = Object.values(data).map((c: any) => ({
       ...c,
+      createdByName: c.createdByName || "Unknown",
       syncStatus: "synced",
     }));
 

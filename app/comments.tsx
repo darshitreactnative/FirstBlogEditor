@@ -64,6 +64,10 @@ export default function CommentsScreen() {
         ]}
       >
         <Text style={styles.bubbleText}>{item.text}</Text>
+        {/*  Sender name */}
+        <Text style={styles.senderName}>
+          {item.createdByName}
+        </Text>
         {isPending && <Text style={styles.pendingText}>Sending...</Text>}
       </View>
     );
@@ -136,6 +140,13 @@ const styles = StyleSheet.create({
   bubbleText: {
     fontSize: 16,
   },
+  senderName: {
+    fontSize: 11,
+    color: "#999",
+    marginTop: 4,
+    alignSelf: "flex-end",
+  },
+
   pendingText: {
     fontSize: 10,
     color: "#888",

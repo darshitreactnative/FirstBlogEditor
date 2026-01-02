@@ -33,17 +33,29 @@ export const saveBlogPost = async (post: BlogPost) => {
 
   const enriched: BlogPost = {
     ...post,
+
     authorId: post.authorId || user.uid,
+    authorName: post.authorName || user.displayName || "Unknown",
+
     lastEditedBy: user.uid,
+    lastEditedByName: user.displayName || "Unknown",
+
     updatedAt: Date.now(),
     version: (post.version || 0) + 1,
     syncStatus: "pending",
+
     collaborators: {
       ...(post.collaborators || {}),
       [user.uid]: true
-    }
+    },
+     collaboratorNames: {
+      ...(post.collaboratorNames || {}),
+      [user.uid]: user.displayName || "Unknown",
+    },
   };
+
   mergeLocalPost(enriched);
+
   const net = await NetInfo.fetch();
   if (!net.isConnected || !net.isInternetReachable) {
     saveQueue([...getQueue(), { type: "UPSERT", payload: enriched }]);
@@ -55,9 +67,14 @@ export const saveBlogPost = async (post: BlogPost) => {
     if (snap.exists()) {
       const existing: BlogPost = snap.val();
       enriched.authorId = existing.authorId;
+      enriched.authorName = existing.authorName;
       enriched.collaborators = {
         ...existing.collaborators,
         [user.uid]: true
+      };
+       enriched.collaboratorNames = {
+        ...existing.collaboratorNames,
+        [user.uid]: user.displayName || "Unknown",
       };
     }
     await set(postRef, removeLocalFields(enriched));

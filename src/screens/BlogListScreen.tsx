@@ -14,7 +14,6 @@ import {
   View,
 } from "react-native";
 import { auth } from "../firebase";
-import { BlogPost } from "../models/BlogPost";
 import { listenToBlogs } from "../services/blogListener.service";
 import { getPosts, savePosts } from "../services/localStorage.service";
 import { processSyncQueue } from "../services/syncEngine.service";
@@ -23,11 +22,11 @@ import { postsAtom } from "../store/atoms";
 export default function BlogListScreen() {
   const [posts, setPosts] = useAtom(postsAtom);
   const router = useRouter();
-
-  const blogUnsubRef = useRef<null | (() => void)>(null);
+  const blogUnsubRef = useRef(null);
 
   useEffect(() => {
     setPosts(getPosts());
+
     const interval = setInterval(() => {
       processSyncQueue();
     }, 5000);
@@ -49,10 +48,8 @@ export default function BlogListScreen() {
 
     const unsubscribeAuth = onAuthStateChanged(auth, user => {
       if (user) {
-        console.log("AUTH READY → START BLOG LISTENER");
         savePosts([]);
         setPosts([]);
-        // Remove old listener if exists
         if (blogUnsubRef.current) {
           blogUnsubRef.current();
         }
@@ -66,15 +63,20 @@ export default function BlogListScreen() {
       unsubscribeNet();
       unsubscribeAuth();
       appStateSub.remove();
+
       if (blogUnsubRef.current) {
         blogUnsubRef.current();
       }
     };
   }, []);
 
-  const renderItem = ({ item }: { item: BlogPost }) => {
+  const renderItem = ({ item }) => {
     const isSynced = item.syncStatus === "synced";
 
+    const collaborators =
+      item.collaboratorNames && Object.keys(item.collaboratorNames).length > 0
+        ? Object.values(item.collaboratorNames).join(", ")
+        : "—";
     return (
       <TouchableOpacity
         style={styles.card}
@@ -108,24 +110,28 @@ export default function BlogListScreen() {
           </View>
         </View>
 
-        {/* Comment Button */}
         <TouchableOpacity
           style={styles.commentButton}
           activeOpacity={0.8}
           onPress={() =>
             router.push({
-              pathname:"/comments",
-              params: {blogTitle: item.title, blogId: item.id},
+              pathname: "/comments",
+              params: { blogTitle: item.title, blogId: item.id },
             })
           }
         >
-          <Text style={styles.commentButtonText}>💬   Comments</Text>
+          <Text style={styles.commentButtonText}>💬 Comments</Text>
         </TouchableOpacity>
 
         <Text numberOfLines={2} style={styles.preview}>
           {item.content || "No content"}
         </Text>
 
+        <Text style={styles.meta}>AuthorName :- {item.authorName}</Text>
+        <Text style={styles.meta}>
+          Last edited :- {item.lastEditedByName}
+        </Text>
+        <Text style={styles.meta}>Collaborators :- {collaborators}</Text>
         <Text style={styles.meta}>
           Version {item.version} •{" "}
           {new Date(item.updatedAt).toLocaleString()}
@@ -133,6 +139,7 @@ export default function BlogListScreen() {
       </TouchableOpacity>
     );
   };
+
 
   return (
     <View style={styles.container}>
@@ -142,6 +149,7 @@ export default function BlogListScreen() {
       >
         <Text style={styles.addButtonText}>＋ New Blog</Text>
       </TouchableOpacity>
+
       <FlatList
         data={posts}
         keyExtractor={item => item.id}
@@ -161,6 +169,7 @@ export default function BlogListScreen() {
     </View>
   );
 }
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,

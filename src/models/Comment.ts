@@ -5,6 +5,7 @@ type Comment = {
   text: string;
 
   createdBy: string;
+  createdByName: string;
   createdAt: number;
 
   syncStatus: "synced" | "pending";

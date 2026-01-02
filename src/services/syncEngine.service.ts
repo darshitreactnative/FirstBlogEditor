@@ -11,14 +11,22 @@ import {
 } from "./localStorage.service";
 
 // Posts sanitizer 
-const sanitize = (post: any, userId: string) => {
+const sanitize = (post: any, userId: string, userName: string) => {
   const clean = { ...post };
 
   clean.authorId = clean.authorId || userId;
+  clean.authorName = clean.authorName || userName;
+
   clean.lastEditedBy = userId;
+  clean.lastEditedByName = userName;
+
   clean.updatedAt = Date.now();
+
   clean.collaborators = clean.collaborators || {};
+  clean.collaboratorNames = clean.collaboratorNames || {};
+
   clean.collaborators[userId] = true;
+  clean.collaboratorNames[userId] = userName;
 
   delete clean.syncStatus;
   delete clean.localOnly;
@@ -50,11 +58,16 @@ export const processSyncQueue = async () => {
       const postRef = ref(realtimeDb, `posts/${item.payload.id}`);
       const snap = await get(postRef);
 
-      let payload = sanitize(item.payload, user.uid);
+      let payload = sanitize(
+        item.payload,
+        user.uid,
+        user.displayName || "Unknown"
+      );
 
       if (snap.exists()) {
         const existing = snap.val();
         payload.authorId = existing.authorId;
+        payload.authorName = existing.authorName;
         payload.collaborators = {
           ...existing.collaborators,
           ...payload.collaborators
